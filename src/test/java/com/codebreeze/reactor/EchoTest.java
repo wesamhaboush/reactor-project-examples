@@ -1,7 +1,10 @@
 package com.codebreeze.reactor;
 
+import com.codebreeze.reactor.services.BlackHole;
+import com.codebreeze.reactor.services.EchoService;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.junit.Before;
 import org.junit.Test;
 import reactor.Environment;
 import reactor.bus.Event;
@@ -14,18 +17,25 @@ import reactor.jarjar.com.lmax.disruptor.YieldingWaitStrategy;
 import reactor.jarjar.com.lmax.disruptor.dsl.ProducerType;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static java.util.stream.IntStream.range;
 
-public class ReactorTest {
+public class EchoTest {
     private static final int BACKLOG = 2048 * 8;
     private static final int EVENT_COUNT = 2000 * 8;
+    private EchoService echoService;
+    private BlackHole<String> blackhole;
+
+    @Before
+    public void setUp(){
+        echoService = new EchoService();
+        //do nothing!!
+        blackhole = s -> {};
+    }
 
     @Test
     public void testStuff() throws InterruptedException {
         final Event<MutablePair<String, CountDownLatch>> event = Event.wrap(MutablePair.of("Hello World!", new CountDownLatch(EVENT_COUNT)));
-        final AtomicLong counter = new AtomicLong(0);
 
         final Dispatcher ringBufferDispatcher = new RingBufferDispatcher(
                 "ringBufferDispatcher",
@@ -51,7 +61,7 @@ public class ReactorTest {
         );
 
         final Consumer<Event<MutablePair<String, CountDownLatch>>> consumer = anEvent -> {
-            counter.incrementAndGet();
+            blackhole.consume(echoService.echo(anEvent.getData().getLeft()));
             anEvent.getData().getRight().countDown();
         };
 

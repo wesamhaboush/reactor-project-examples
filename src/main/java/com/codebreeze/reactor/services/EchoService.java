@@ -1,15 +1,18 @@
 package com.codebreeze.reactor.services;
 
-import com.google.common.util.concurrent.Uninterruptibles;
-
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 
 public class EchoService {
 
     public String echo(final String request) {
-        Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+        spin(10);
         return new Date() + ":" + request;
+    }
+
+    private static void spin(int milliseconds) {
+        long sleepTime = milliseconds*1000000L; // convert to nanoseconds
+        long startTime = System.nanoTime();
+        while ((System.nanoTime() - startTime) < sleepTime) {}
     }
 }
